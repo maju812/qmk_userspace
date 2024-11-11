@@ -28,7 +28,6 @@ enum charybdis_keymap_layers {
 #define CHARYBDIS_AUTO_POINTER_LAYER_TRIGGER_ENABLE
 #define CHARYBDIS_AUTO_POINTER_LAYER_TRIGGER_TIMEOUT_MS 800
 #define CHARYBDIS_MINIMUM_DEFAULT_DPI 2000
-#define CHARYBDIS_DRAGSCROLL_REVERSE_Y // inverts vertical scrolling
 
 #ifdef CHARYBDIS_AUTO_POINTER_LAYER_TRIGGER_ENABLE
 static uint16_t auto_pointer_layer_timer = 0;

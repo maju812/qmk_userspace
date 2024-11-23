@@ -40,8 +40,10 @@ static uint16_t auto_pointer_layer_timer = 0;
 #    endif // CHARYBDIS_AUTO_POINTER_LAYER_TRIGGER_THRESHOLD
 #endif     // CHARYBDIS_AUTO_POINTER_LAYER_TRIGGER_ENABLE
 
-#define LOWER LT(LAYER_LOWER, KC_MHEN)
-#define RAISE LT(LAYER_RAISE, KC_HENK)
+#define LOWER MO(LAYER_LOWER)
+#define RAISE MO(LAYER_RAISE)
+#define PT_Z LT(LAYER_POINTER, KC_Z)
+#define PT_SLSH LT(LAYER_POINTER, KC_SLSH)
 
 // clang-format off
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {

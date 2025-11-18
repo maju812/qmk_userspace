@@ -128,7 +128,7 @@ static void apply_trackball_acceleration(report_mouse_t *m) {
 
     // パラメータ（いま落ち着いている値）
     const float v1        = 1.3f;  // このあたりまではほぼ等倍
-    const float v2        = 8.0f;  // ここまでの間で加速していく
+    const float v2        = 7.0f;  // ここまでの間で加速していく
     const float max_scale = 12.0f; // 最大倍率
 
     float scale = 1.0f;

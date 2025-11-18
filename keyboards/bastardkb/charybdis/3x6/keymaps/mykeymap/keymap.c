@@ -119,41 +119,39 @@ static inline int8_t clip2int8(int16_t v) {
 // ==== トラックボール用 なめらか加速関数 ====
 // mouse_report.x / y をその場で書き換える
 static void apply_trackball_acceleration(report_mouse_t *m) {
-    int16_t x  = m->x;
-    int16_t y  = m->y;
+    int16_t x = m->x;
+    int16_t y = m->y;
 
-    // 「速さ」のざっくり指標（マンハッタン／チェビシェフ風）
-    int16_t ax = x >= 0 ? x : -x;
-    int16_t ay = y >= 0 ? y : -y;
-    int16_t speed = (ax > ay) ? ax : ay;  // max(|x|, |y|)
+    int16_t ax    = (x >= 0) ? x : -x;
+    int16_t ay    = (y >= 0) ? y : -y;
+    int16_t speed = (ax > ay) ? ax : ay; // max(|x|, |y|)
 
-    // パラメータ（好みで調整してOK）
-    const float v1        = 1.3f;  // ここまでは加速なし
-    const float v2        = 8.0f; // ここまでの間でなめらかに増加
-    const float max_scale = 12.0f;  // 最大倍率（倍）
+    // パラメータ（いま落ち着いている値）
+    const float v1        = 1.3f;  // このあたりまではほぼ等倍
+    const float v2        = 8.0f;  // ここまでの間で加速していく
+    const float max_scale = 12.0f; // 最大倍率
 
     float scale = 1.0f;
 
     if (speed <= v1) {
-        // ごく小さい動き → そのまま
+        // ごく小さい動き → スナイプ用で等倍
         scale = 1.0f;
     } else if (speed >= v2) {
-        // 十分速い動き → 上限倍率
+        // 十分速い → 常に max_scale
         scale = max_scale;
     } else {
-        // v1〜v2 の間で線形補間
+        // 0〜1 に正規化
         float t = (float)(speed - v1) / (float)(v2 - v1); // 0〜1
-        scale   = 1.0f + t * (max_scale - 1.0f);
+        float e = t * (0.5f + 0.5f * t);
+        scale   = 1.0f + e * (max_scale - 1.0f);
     }
 
-    // 実際にスケーリングして int8 にクリップ
     float fx = (float)x * scale;
     float fy = (float)y * scale;
 
     m->x = clip2int8((int16_t)fx);
     m->y = clip2int8((int16_t)fy);
 }
-
 
 #ifdef POINTING_DEVICE_ENABLE
 #    ifdef CHARYBDIS_AUTO_POINTER_LAYER_TRIGGER_ENABLE
@@ -162,8 +160,7 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
     apply_trackball_acceleration(&mouse_report);
 
     // ② そのあと、従来どおり自動ポインタレイヤー判定
-    if (abs(mouse_report.x) > CHARYBDIS_AUTO_POINTER_LAYER_TRIGGER_THRESHOLD ||
-        abs(mouse_report.y) > CHARYBDIS_AUTO_POINTER_LAYER_TRIGGER_THRESHOLD) {
+    if (abs(mouse_report.x) > CHARYBDIS_AUTO_POINTER_LAYER_TRIGGER_THRESHOLD || abs(mouse_report.y) > CHARYBDIS_AUTO_POINTER_LAYER_TRIGGER_THRESHOLD) {
         if (auto_pointer_layer_timer == 0) {
             layer_on(LAYER_POINTER);
         }

@@ -62,11 +62,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
   [LAYER_LOWER] = LAYOUT(
   // ╭──────────────────────────────────────────────────────╮ ╭──────────────────────────────────────────────────────╮
-       XXXXXXX, RGB_TOG, KC_MNXT, KC_MPLY, KC_MPRV, XXXXXXX,    KC_LBRC,    KC_7,    KC_8,    KC_9, KC_RBRC, XXXXXXX,
+       XXXXXXX, RGB_TOG,    KC_7,    KC_8,    KC_9, XXXXXXX,    KC_LBRC,    KC_7,    KC_8,    KC_9, KC_RBRC, XXXXXXX,
   // ├──────────────────────────────────────────────────────┤ ├──────────────────────────────────────────────────────┤
-       XXXXXXX, KC_LGUI, KC_LALT, KC_LCTL, KC_LSFT, XXXXXXX,    KC_PPLS,    KC_4,    KC_5,    KC_6, KC_PMNS, XXXXXXX,
+       XXXXXXX, KC_LGUI,    KC_4,    KC_5,    KC_6, XXXXXXX,    KC_PPLS,    KC_4,    KC_5,    KC_6, KC_PMNS, XXXXXXX,
   // ├──────────────────────────────────────────────────────┤ ├──────────────────────────────────────────────────────┤
-       XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,  EE_CLR, QK_BOOT,    KC_PAST,    KC_1,    KC_2,    KC_3, KC_PSLS, XXXXXXX,
+       XXXXXXX,    KC_0,    KC_1,    KC_2,    KC_3, QK_BOOT,    KC_PAST,    KC_1,    KC_2,    KC_3, KC_PSLS, XXXXXXX,
   // ╰──────────────────────────────────────────────────────┤ ├──────────────────────────────────────────────────────╯
                                   XXXXXXX, XXXXXXX, _______,    XXXXXXX, _______
   //                            ╰───────────────────────────╯ ╰──────────────────╯
@@ -128,24 +128,22 @@ static void apply_trackball_acceleration(report_mouse_t *m) {
     int16_t speed = (ax > ay) ? ax : ay;  // max(|x|, |y|)
 
     // パラメータ（好みで調整してOK）
-    const float v1        = 1.3f;  // ここまでは加速なし
-    const float v2        = 8.0f; // ここまでの間でなめらかに増加
-    const float max_scale = 12.0f;  // 最大倍率（倍）
+    const float v1        = 1.3f;
+    const float v2        = 8.0f;
+    const float max_scale = 12.0f;
+    const float curve_p   = 1.5f;  // 1.0 = 線形 / >1 = 後半急上昇 / <1 = 前半から強い
 
     float scale = 1.0f;
 
     if (speed <= v1) {
-        // ごく小さい動き → そのまま
         scale = 1.0f;
     } else if (speed >= v2) {
-        // 十分速い動き → 上限倍率
         scale = max_scale;
     } else {
-        // v1〜v2 の間で線形補間
         float t = (float)(speed - v1) / (float)(v2 - v1); // 0〜1
-        scale   = 1.0f + t * (max_scale - 1.0f);
+        float e = powf(t, curve_p);                       // イージング
+        scale   = 1.0f + e * (max_scale - 1.0f);
     }
-
     // 実際にスケーリングして int8 にクリップ
     float fx = (float)x * scale;
     float fy = (float)y * scale;

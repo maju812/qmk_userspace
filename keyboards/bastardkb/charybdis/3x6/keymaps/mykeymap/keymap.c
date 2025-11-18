@@ -64,9 +64,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   // ╭──────────────────────────────────────────────────────╮ ╭──────────────────────────────────────────────────────╮
        XXXXXXX, RGB_TOG,    KC_7,    KC_8,    KC_9, XXXXXXX,    KC_LBRC,    KC_7,    KC_8,    KC_9, KC_RBRC, XXXXXXX,
   // ├──────────────────────────────────────────────────────┤ ├──────────────────────────────────────────────────────┤
-       XXXXXXX, KC_LGUI,    KC_4,    KC_5,    KC_6, XXXXXXX,    KC_PPLS,    KC_4,    KC_5,    KC_6, KC_PMNS, XXXXXXX,
+       KC_BSPC, KC_PMNS,    KC_4,    KC_5,    KC_6, KC_PDOT,    KC_PPLS,    KC_4,    KC_5,    KC_6, KC_PMNS, XXXXXXX,
   // ├──────────────────────────────────────────────────────┤ ├──────────────────────────────────────────────────────┤
-       XXXXXXX,    KC_0,    KC_1,    KC_2,    KC_3, QK_BOOT,    KC_PAST,    KC_1,    KC_2,    KC_3, KC_PSLS, XXXXXXX,
+       XXXXXXX,    KC_0,    KC_1,    KC_2,    KC_3, KC_PPLS,    KC_PAST,    KC_1,    KC_2,    KC_3, KC_PSLS, XXXXXXX,
   // ╰──────────────────────────────────────────────────────┤ ├──────────────────────────────────────────────────────╯
                                   XXXXXXX, XXXXXXX, _______,    XXXXXXX, _______
   //                            ╰───────────────────────────╯ ╰──────────────────╯
@@ -117,19 +117,18 @@ static inline int8_t clip2int8(int16_t v) {
 }
 
 // ==== トラックボール用 なめらか加速関数 ====
-// mouse_report.x / y をその場で書き換える
 static void apply_trackball_acceleration(report_mouse_t *m) {
-    int16_t x = m->x;
-    int16_t y = m->y;
+    int16_t x  = m->x;
+    int16_t y  = m->y;
 
-    int16_t ax    = (x >= 0) ? x : -x;
-    int16_t ay    = (y >= 0) ? y : -y;
-    int16_t speed = (ax > ay) ? ax : ay; // max(|x|, |y|)
+    int16_t ax = (x >= 0) ? x : -x;
+    int16_t ay = (y >= 0) ? y : -y;
+    int16_t speed = (ax > ay) ? ax : ay;  // max(|x|, |y|)
 
-    // パラメータ（いま落ち着いている値）
-    const float v1        = 1.3f;  // このあたりまではほぼ等倍
-    const float v2        = 7.0f;  // ここまでの間で加速していく
-    const float max_scale = 12.0f; // 最大倍率
+    // いま使っているパラメータをそのまま利用
+    const float v1        = 1.2f;   // ここまではほぼ等倍
+    const float v2        = 8.0f;   // ここまでの間で加速していく
+    const float max_scale = 12.0f;  // 最大倍率
 
     float scale = 1.0f;
 
@@ -142,8 +141,14 @@ static void apply_trackball_acceleration(report_mouse_t *m) {
     } else {
         // 0〜1 に正規化
         float t = (float)(speed - v1) / (float)(v2 - v1); // 0〜1
-        float e = t * t;
-        scale   = 1.0f + e * (max_scale - 1.0f);
+
+        // 擬似 t^1.3 カーブ
+        // e ≒ t^1.3 に近い形になるように、
+        // 一次と二次の線形結合 0.6*t + 0.4*t^2 を使用
+        float e = t * (0.6f + 0.4f * t);
+
+        // 1.0〜max_scale の間でスケール
+        scale = 1.0f + e * (max_scale - 1.0f);
     }
 
     float fx = (float)x * scale;

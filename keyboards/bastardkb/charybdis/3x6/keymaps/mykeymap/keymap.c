@@ -27,7 +27,7 @@ enum charybdis_keymap_layers {
 /** \brief Automatically enable sniping-mode on the pointer layer. */
 #define CHARYBDIS_AUTO_SNIPING_ON_LAYER LAYER_POINTER
 #define CHARYBDIS_AUTO_POINTER_LAYER_TRIGGER_ENABLE
-#define CHARYBDIS_MINIMUM_DEFAULT_DPI 2000
+#define CHARYBDIS_MINIMUM_DEFAULT_DPI 1600
 
 #ifdef CHARYBDIS_AUTO_POINTER_LAYER_TRIGGER_ENABLE
 static uint16_t auto_pointer_layer_timer = 0;
@@ -128,9 +128,9 @@ static void apply_trackball_acceleration(report_mouse_t *m) {
     int16_t speed = (ax > ay) ? ax : ay;  // max(|x|, |y|)
 
     // パラメータ（好みで調整してOK）
-    const float v1        = 1.0f;  // ここまでは加速なし
-    const float v2        = 5.0f; // ここまでの間でなめらかに増加
-    const float max_scale = 10.0f;  // 最大倍率（倍）
+    const float v1        = 1.5f;  // ここまでは加速なし
+    const float v2        = 8.0f; // ここまでの間でなめらかに増加
+    const float max_scale = 12.0f;  // 最大倍率（倍）
 
     float scale = 1.0f;
 

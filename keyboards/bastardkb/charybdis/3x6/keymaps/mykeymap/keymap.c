@@ -184,3 +184,8 @@ void matrix_scan_user(void) {
 #    endif // CHARYBDIS_AUTO_POINTER_LAYER_TRIGGER_ENABLE
 
 #endif // POINTING_DEVICE_ENABLE
+
+// LOWER + RAISE で LAYER_ADJUST を有効にする tri-layer 設定
+layer_state_t layer_state_set_user(layer_state_t state) {
+    return update_tri_layer_state(state, LAYER_LOWER, LAYER_RAISE, LAYER_ADJUST);
+}

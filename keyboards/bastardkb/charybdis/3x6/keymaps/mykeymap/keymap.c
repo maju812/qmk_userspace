@@ -128,22 +128,24 @@ static void apply_trackball_acceleration(report_mouse_t *m) {
     int16_t speed = (ax > ay) ? ax : ay;  // max(|x|, |y|)
 
     // パラメータ（好みで調整してOK）
-    const float v1        = 1.3f;
-    const float v2        = 8.0f;
-    const float max_scale = 12.0f;
-    const float curve_p   = 1.5f;  // 1.0 = 線形 / >1 = 後半急上昇 / <1 = 前半から強い
+    const float v1        = 1.3f;  // ここまでは加速なし
+    const float v2        = 8.0f; // ここまでの間でなめらかに増加
+    const float max_scale = 12.0f;  // 最大倍率（倍）
 
     float scale = 1.0f;
 
     if (speed <= v1) {
+        // ごく小さい動き → そのまま
         scale = 1.0f;
     } else if (speed >= v2) {
+        // 十分速い動き → 上限倍率
         scale = max_scale;
     } else {
+        // v1〜v2 の間で線形補間
         float t = (float)(speed - v1) / (float)(v2 - v1); // 0〜1
-        float e = powf(t, curve_p);                       // イージング
-        scale   = 1.0f + e * (max_scale - 1.0f);
+        scale   = 1.0f + t * (max_scale - 1.0f);
     }
+
     // 実際にスケーリングして int8 にクリップ
     float fx = (float)x * scale;
     float fy = (float)y * scale;

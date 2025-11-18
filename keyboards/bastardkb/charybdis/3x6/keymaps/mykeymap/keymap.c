@@ -142,7 +142,7 @@ static void apply_trackball_acceleration(report_mouse_t *m) {
     } else {
         // 0〜1 に正規化
         float t = (float)(speed - v1) / (float)(v2 - v1); // 0〜1
-        float e = t * (0.5f + 0.5f * t);
+        float e = t * t;
         scale   = 1.0f + e * (max_scale - 1.0f);
     }
 

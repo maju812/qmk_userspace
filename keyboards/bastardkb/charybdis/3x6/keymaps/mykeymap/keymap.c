@@ -128,8 +128,8 @@ static void apply_trackball_acceleration(report_mouse_t *m) {
     int16_t speed = (ax > ay) ? ax : ay;  // max(|x|, |y|)
 
     // パラメータ（好みで調整してOK）
-    const float v1        = 1.2f;  // ここまでは加速なし
-    const float v2        = 6.0f; // ここまでの間でなめらかに増加
+    const float v1        = 1.3f;  // ここまでは加速なし
+    const float v2        = 8.0f; // ここまでの間でなめらかに増加
     const float max_scale = 12.0f;  // 最大倍率（倍）
 
     float scale = 1.0f;

@@ -110,15 +110,44 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 };
 // clang-format on
 
+// ==== トラックボール加速用のヘルパー関数 ====
+
+static inline int8_t clip2int8(int16_t v) {
+    return (v < -127) ? -127 : (v > 127) ? 127 : (int8_t)v;
+}
+
+static int8_t process_trackball_acceleration(int16_t v) {
+    // 好みに応じて調整してOK
+    const int   step1 = 3;     // 小さな動き
+    const float mul1  = 3.0f;  // 中程度の動きの倍率
+    const int   step2 = 10;    // 大きな動き
+    const float mul2  = 13.0f; // 大きな動きの倍率
+
+    int abs_v = abs(v);
+
+    if (abs_v > step2) {
+        return clip2int8(v * mul2);
+    } else if (abs_v > step1) {
+        return clip2int8(v * mul1);
+    }
+    return clip2int8(v);
+}
+
 #ifdef POINTING_DEVICE_ENABLE
 #    ifdef CHARYBDIS_AUTO_POINTER_LAYER_TRIGGER_ENABLE
 report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
+    // ① まずトラックボールの移動量に加速をかける
+    mouse_report.x = process_trackball_acceleration(mouse_report.x);
+    mouse_report.y = process_trackball_acceleration(mouse_report.y);
+
+    // ② そのあと、従来どおり自動ポインタレイヤー判定
     if (abs(mouse_report.x) > CHARYBDIS_AUTO_POINTER_LAYER_TRIGGER_THRESHOLD || abs(mouse_report.y) > CHARYBDIS_AUTO_POINTER_LAYER_TRIGGER_THRESHOLD) {
         if (auto_pointer_layer_timer == 0) {
             layer_on(LAYER_POINTER);
         }
         auto_pointer_layer_timer = timer_read();
     }
+
     return mouse_report;
 }
 

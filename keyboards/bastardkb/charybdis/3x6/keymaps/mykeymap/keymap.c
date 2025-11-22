@@ -26,7 +26,7 @@ enum charybdis_keymap_layers {
 
 /** \brief Automatically enable sniping-mode on the pointer layer. */
 #define CHARYBDIS_AUTO_SNIPING_ON_LAYER LAYER_POINTER
-#define CHARYBDIS_AUTO_POINTER_LAYER_TRIGGER_ENABLE
+
 #define CHARYBDIS_MINIMUM_DEFAULT_DPI 1600
 
 #ifdef CHARYBDIS_AUTO_POINTER_LAYER_TRIGGER_ENABLE

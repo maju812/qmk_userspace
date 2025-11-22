@@ -36,3 +36,5 @@
 #endif // POINTING_DEVICE_ENABLE
 
 #define CHARYBDIS_DRAGSCROLL_REVERSE_Y // inverts vertical scrolling
+
+#define PERMISSIVE_HOLD

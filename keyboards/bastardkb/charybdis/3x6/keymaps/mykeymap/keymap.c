@@ -41,8 +41,6 @@ static uint16_t auto_pointer_layer_timer = 0;
 #    endif // CHARYBDIS_AUTO_POINTER_LAYER_TRIGGER_THRESHOLD
 #endif     // CHARYBDIS_AUTO_POINTER_LAYER_TRIGGER_ENABLE
 
-#define PERMISSIVE_HOLD
-
 #define LOWER LT(LAYER_LOWER, KC_INT5)
 #define RAISE LT(LAYER_RAISE, KC_INT4)
 #define PT_Z LT(LAYER_POINTER, KC_Z)
@@ -120,17 +118,17 @@ static inline int8_t clip2int8(int16_t v) {
 
 // ==== トラックボール用 なめらか加速関数 ====
 static void apply_trackball_acceleration(report_mouse_t *m) {
-    int16_t x  = m->x;
-    int16_t y  = m->y;
+    int16_t x = m->x;
+    int16_t y = m->y;
 
-    int16_t ax = (x >= 0) ? x : -x;
-    int16_t ay = (y >= 0) ? y : -y;
-    int16_t speed = (ax > ay) ? ax : ay;  // max(|x|, |y|)
+    int16_t ax    = (x >= 0) ? x : -x;
+    int16_t ay    = (y >= 0) ? y : -y;
+    int16_t speed = (ax > ay) ? ax : ay; // max(|x|, |y|)
 
     // いま使っているパラメータをそのまま利用
-    const float v1        = 1.2f;   // ここまではほぼ等倍
-    const float v2        = 8.0f;   // ここまでの間で加速していく
-    const float max_scale = 12.0f;  // 最大倍率
+    const float v1        = 1.2f;  // ここまではほぼ等倍
+    const float v2        = 8.0f;  // ここまでの間で加速していく
+    const float max_scale = 12.0f; // 最大倍率
 
     float scale = 1.0f;
 

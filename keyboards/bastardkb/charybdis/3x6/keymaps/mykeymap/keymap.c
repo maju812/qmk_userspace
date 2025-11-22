@@ -199,6 +199,12 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
         case OSM(MOD_LSFT):
             if (record->event.pressed) {
+                
+                // Caps Wordが既にONになっているか確認
+                if (is_caps_word_on()) {
+                    caps_word_off(); // 明示的にOFFにする
+                    return false;    // 重要：ここで処理を打ち切り、OSMを発動させない
+                }
                 // ダブルタップ判定
                 if (lshift_timer && timer_elapsed(lshift_timer) < TAPPING_TERM) {
                     // 1回目のタップで有効になったOne Shot Shiftをキャンセル

@@ -39,3 +39,5 @@
 
 #define PERMISSIVE_HOLD
 #define TAPPING_TERM 160
+
+#define ONESHOT_TAP_TOGGLE 0

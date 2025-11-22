@@ -189,3 +189,32 @@ void matrix_scan_user(void) {
 layer_state_t layer_state_set_user(layer_state_t state) {
     return update_tri_layer_state(state, LAYER_LOWER, LAYER_RAISE, LAYER_ADJUST);
 }
+
+// ダブルタップ判定用のタイマー変数
+static uint16_t lshift_timer = 0;
+
+bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    // ① 左シフトキーの処理
+    if (keycode == KC_LSFT) {
+        if (record->event.pressed) {
+            // 前回のShift入力から TAPPING_TERM (デフォルト200ms) 以内ならダブルタップと判定
+            if (lshift_timer && timer_elapsed(lshift_timer) < TAPPING_TERM) {
+                caps_word_toggle(); // Caps Word を切り替え
+                lshift_timer = 0;   // タイマーをリセット
+                return false;       // 2回目のShift入力自体はPCに送らない（誤操作防止）
+            }
+            // タイマーを開始（1回目のタップ時刻を記録）
+            lshift_timer = timer_read();
+        }
+        return true; // 1回目のShift入力は通常通りPCに送る（遅延なし）
+    }
+
+    // ② 他のキーが押された場合の処理（誤爆防止）
+    // Shiftを押した後に別のキー（例えば 'A'）を押した場合、
+    // それは「Shift連打」ではないのでタイマーをリセットする。
+    if (record->event.pressed) {
+        lshift_timer = 0;
+    }
+
+    return true;
+}

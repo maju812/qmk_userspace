@@ -55,9 +55,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   // ├──────────────────────────────────────────────────────┤ ├──────────────────────────────────────────────────────┤
        KC_BSPC, KC_MINS,    KC_I,    KC_A,    KC_O,  KC_DOT,       KC_G,    KC_T,    KC_N,    KC_S,    KC_H,    KC_F,
   // ├──────────────────────────────────────────────────────┤ ├──────────────────────────────────────────────────────┤
-       KC_LCTL,    KC_Z,    KC_X,    KC_C,    KC_V, KC_SCLN,       KC_W,    KC_K,    KC_M,    KC_J,    KC_B, KC_RSFT,
+       KC_LSFT,    KC_Z,    KC_X,    KC_C,    KC_V, KC_SCLN,       KC_W,    KC_K,    KC_M,    KC_J,    KC_B, KC_RSFT,
   // ╰──────────────────────────────────────────────────────┤ ├──────────────────────────────────────────────────────╯
-                                   KC_SPC, KC_LSFT,   LOWER,      RAISE,  KC_ENT
+                                   KC_SPC, KC_LCTL,   LOWER,      RAISE,  KC_ENT
   //                            ╰───────────────────────────╯ ╰──────────────────╯
   ),
 
@@ -121,7 +121,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 // 軸ごとの感度補正（1.0 = 補正なし）
 // 親指は縦移動が苦手なので、Y軸を少しブーストすると快適になります
 #define SENSITIVITY_X 1.0f
-#define SENSITIVITY_Y 1.2f
+#define SENSITIVITY_Y 1.1f
 
 // ===============================================
 

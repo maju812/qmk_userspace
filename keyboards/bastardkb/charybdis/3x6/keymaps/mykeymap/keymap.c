@@ -244,10 +244,20 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 // --- Key Overrides ------------------------------------------------------
 
 const key_override_t ctrl_f_to_o =
-    ko_make_basic(MOD_MASK_CTRL, KC_F, LCTL(KC_O));
+    ko_make_with_layers(
+        MOD_MASK_CTRL,    // 条件：Ctrl が押されたとき
+        KC_F,             // from: F
+        LCTL(KC_O),       // to: Ctrl+O（強制）
+        1 << 0            // layer_mask: レイヤー 0
+    );
 
 const key_override_t ctrl_o_to_f =
-    ko_make_basic(MOD_MASK_CTRL, KC_O, LCTL(KC_F));
+    ko_make_with_layers(
+        MOD_MASK_CTRL,
+        KC_O,
+        LCTL(KC_F),
+        1 << 0            // layer 0 限定
+    );
 
 const key_override_t *key_overrides[] = {
     &ctrl_f_to_o,

@@ -246,24 +246,14 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 // ko_make_with_layers(修飾キー, 元キー, 送るキー, レイヤーマスク) を使います
 
 // 1. LAYER_BASE (レイヤー0) の時だけ、Ctrl+O → F
-const key_override_t ctrl_o_to_f = ko_make_with_layers(
-    MOD_MASK_CTRL, 
-    KC_O, 
-    KC_F, 
-    (1 << LAYER_BASE) // レイヤー0のみ有効
+const key_override_t ctrl_o_to_f = ko_make_with_layers(MOD_MASK_CTRL, KC_O, KC_F,
+                                                       (1 << LAYER_BASE) // レイヤー0のみ有効
 );
 
 // 2. LAYER_BASE (レイヤー0) の時だけ、Ctrl+F → O
-const key_override_t ctrl_f_to_o = ko_make_with_layers(
-    MOD_MASK_CTRL, 
-    KC_F, 
-    KC_O, 
-    (1 << LAYER_BASE) // レイヤー0のみ有効
+const key_override_t ctrl_f_to_o = ko_make_with_layers(MOD_MASK_CTRL, KC_F, KC_O,
+                                                       (1 << LAYER_BASE) // レイヤー0のみ有効
 );
 
 // 登録用配列
-const key_override_t **key_overrides = (const key_override_t *[]){
-    &ctrl_o_to_f,
-    &ctrl_f_to_o,
-    NULL
-};
+const key_override_t **key_overrides = (const key_override_t *[]){&ctrl_o_to_f, &ctrl_f_to_o, NULL};

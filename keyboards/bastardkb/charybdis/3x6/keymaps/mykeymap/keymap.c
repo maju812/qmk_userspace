@@ -10,7 +10,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ *k
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -110,52 +110,52 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 };
 // clang-format on
 
-// ==== トラックボール加速用のヘルパー関数 ====
+// ============ トラックボール加速設定 ============
+
+// 加速カーブのパラメータ
+#define ACCEL_V1 1.2f         // 低速域の閾値
+#define ACCEL_V2 8.0f         // 高速域への到達閾値
+#define ACCEL_MAX_SCALE 12.0f // 最大加速倍率
+
+// 軸ごとの感度補正（1.0 = 補正なし）
+// 親指は縦移動が苦手なので、Y軸を少しブーストすると快適になります
+#define SENSITIVITY_X 1.0f
+#define SENSITIVITY_Y 1.2f
+
+// ===============================================
 
 static inline int8_t clip2int8(int16_t v) {
     return (v < -127) ? -127 : (v > 127) ? 127 : (int8_t)v;
 }
 
-// ==== トラックボール用 なめらか加速関数 ====
 static void apply_trackball_acceleration(report_mouse_t *m) {
-    int16_t x = m->x;
-    int16_t y = m->y;
+    // 1. まず軸ごとの基本感度を適用（親指補正）
+    float raw_x = (float)m->x * SENSITIVITY_X;
+    float raw_y = (float)m->y * SENSITIVITY_Y;
 
-    int16_t ax    = (x >= 0) ? x : -x;
-    int16_t ay    = (y >= 0) ? y : -y;
-    int16_t speed = (ax > ay) ? ax : ay; // max(|x|, |y|)
+    // 2. 正確な移動速度（ユークリッド距離）を計算
+    float speed = sqrtf(raw_x * raw_x + raw_y * raw_y);
 
-    // いま使っているパラメータをそのまま利用
-    const float v1        = 1.2f;  // ここまではほぼ等倍
-    const float v2        = 8.0f;  // ここまでの間で加速していく
-    const float max_scale = 12.0f; // 最大倍率
-
+    // 3. 加速倍率の計算
     float scale = 1.0f;
 
-    if (speed <= v1) {
-        // ごく小さい動き → スナイプ用で等倍
-        scale = 1.0f;
-    } else if (speed >= v2) {
-        // 十分速い → 常に max_scale
-        scale = max_scale;
-    } else {
-        // 0〜1 に正規化
-        float t = (float)(speed - v1) / (float)(v2 - v1); // 0〜1
+    if (speed > ACCEL_V1) {
+        if (speed >= ACCEL_V2) {
+            scale = ACCEL_MAX_SCALE;
+        } else {
+            // 0〜1 に正規化
+            float t = (speed - ACCEL_V1) / (ACCEL_V2 - ACCEL_V1);
 
-        // 擬似 t^1.3 カーブ
-        // e ≒ t^1.3 に近い形になるように、
-        // 一次と二次の線形結合 0.6*t + 0.4*t^2 を使用
-        float e = t * (0.6f + 0.4f * t);
+            // 擬似 t^1.3 カーブ (0.6*t + 0.4*t^2)
+            float curve = t * (0.6f + 0.4f * t);
 
-        // 1.0〜max_scale の間でスケール
-        scale = 1.0f + e * (max_scale - 1.0f);
+            scale = 1.0f + curve * (ACCEL_MAX_SCALE - 1.0f);
+        }
     }
 
-    float fx = (float)x * scale;
-    float fy = (float)y * scale;
-
-    m->x = clip2int8((int16_t)fx);
-    m->y = clip2int8((int16_t)fy);
+    // 4. 最終的な値を適用
+    m->x = clip2int8((int16_t)(raw_x * scale));
+    m->y = clip2int8((int16_t)(raw_y * scale));
 }
 
 #ifdef POINTING_DEVICE_ENABLE
@@ -194,12 +194,10 @@ layer_state_t layer_state_set_user(layer_state_t state) {
 static uint16_t lshift_timer = 0;
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-    
     // --- アルティメット左Shift (OSM + Caps Word) ---
     switch (keycode) {
         case OSM(MOD_LSFT):
             if (record->event.pressed) {
-                
                 // Caps Wordが既にONになっているか確認
                 if (is_caps_word_on()) {
                     caps_word_off(); // 明示的にOFFにする
@@ -208,11 +206,11 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 // ダブルタップ判定
                 if (lshift_timer && timer_elapsed(lshift_timer) < TAPPING_TERM) {
                     // 1回目のタップで有効になったOne Shot Shiftをキャンセル
-                    del_oneshot_mods(MOD_MASK_SHIFT); 
-                    
+                    del_oneshot_mods(MOD_MASK_SHIFT);
+
                     // Caps Word を発動
                     caps_word_toggle();
-                    
+
                     lshift_timer = 0;
                     return false; // 2回目の入力はOSMとして処理させない
                 }
@@ -228,7 +226,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
             break;
     }
-    
+
     // Achordion等の処理があればここに
     // if (!process_achordion(keycode, record)) { return false; }
 

@@ -241,3 +241,27 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     return true;
 }
 
+// --- Key Overrides ------------------------------------------------------
+
+// 1. Ctrl + O -> F (レイヤー0のみ)
+const key_override_t ko_ctrl_o_to_f = ko_make_with_layers(
+    MOD_MASK_CTRL,
+    KC_O,
+    KC_F,
+    1 << LAYER_BASE
+);
+
+// 2. Ctrl + F -> O (レイヤー0のみ)
+const key_override_t ko_ctrl_f_to_o = ko_make_with_layers(
+    MOD_MASK_CTRL,
+    KC_F,
+    KC_O,
+    1 << LAYER_BASE
+);
+
+// key_overrides 配列（必ず "配列" として定義）
+const key_override_t *key_overrides[] = {
+    &ko_ctrl_o_to_f,
+    &ko_ctrl_f_to_o,
+    NULL
+};

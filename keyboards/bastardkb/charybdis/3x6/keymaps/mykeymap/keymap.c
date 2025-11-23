@@ -240,3 +240,16 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
     return true;
 }
+
+// --- キーオーバーライド定義 ---
+
+// 1. 変数として定義
+const key_override_t ctrl_o_to_f = ko_make_with_layers(MOD_MASK_CTRL, KC_O, KC_F, (1 << LAYER_BASE));
+
+const key_override_t ctrl_f_to_o = ko_make_with_layers(MOD_MASK_CTRL, KC_F, KC_O, (1 << LAYER_BASE));
+
+// 2. 配列に登録（変数のアドレス & を渡す）
+const key_override_t **key_overrides = (const key_override_t *[]){
+    &ctrl_o_to_f, &ctrl_f_to_o,
+    NULL // 最後は必ずNULL
+};

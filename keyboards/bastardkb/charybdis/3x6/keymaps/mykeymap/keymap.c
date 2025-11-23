@@ -241,15 +241,60 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     return true;
 }
 
-// --- キーオーバーライド定義 ---
+// 変数定義（既存のまま）
+static uint16_t lshift_timer = 0;
 
-// 1. 変数として定義
-const key_override_t ctrl_o_to_f = ko_make_with_layers(MOD_MASK_CTRL, KC_O, KC_F, (1 << LAYER_BASE));
+bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    
+    // ============ 1. アルティメット左Shift (OSM + Caps Word) ============
+    switch (keycode) {
+        case OSM(MOD_LSFT):
+            if (record->event.pressed) {
+                if (is_caps_word_on()) {
+                    caps_word_off();
+                    return false;
+                }
+                if (lshift_timer && timer_elapsed(lshift_timer) < TAPPING_TERM) {
+                    del_oneshot_mods(MOD_MASK_SHIFT); 
+                    caps_word_toggle();
+                    lshift_timer = 0;
+                    return false;
+                }
+                lshift_timer = timer_read();
+            }
+            return true; 
 
-const key_override_t ctrl_f_to_o = ko_make_with_layers(MOD_MASK_CTRL, KC_F, KC_O, (1 << LAYER_BASE));
+        default:
+            if (record->event.pressed) {
+                lshift_timer = 0;
+            }
+            break;
+    }
 
-// 2. 配列に登録（変数のアドレス & を渡す）
-const key_override_t **key_overrides = (const key_override_t *[]){
-    &ctrl_o_to_f, &ctrl_f_to_o,
-    NULL // 最後は必ずNULL
-};
+    // ============ 2. Ctrl + O/F 入れ替えロジック (手動実装) ============
+    
+    // 条件チェック: Ctrlが押されているか？ AND レイヤー0か？
+    bool is_ctrl_held = (get_mods() & MOD_MASK_CTRL); 
+    bool is_base_layer = (get_highest_layer(layer_state) == LAYER_BASE);
+
+    if (is_ctrl_held && is_base_layer) {
+        if (keycode == KC_O) {
+            if (record->event.pressed) {
+                register_code(KC_F); // Ctrl(物理) + F(送信) = Ctrl+F
+            } else {
+                unregister_code(KC_F);
+            }
+            return false; // 本来の 'O' は送らない
+        }
+        if (keycode == KC_F) {
+            if (record->event.pressed) {
+                register_code(KC_O); // Ctrl(物理) + O(送信) = Ctrl+O
+            } else {
+                unregister_code(KC_O);
+            }
+            return false; // 本来の 'F' は送らない
+        }
+    }
+
+    return true;
+}

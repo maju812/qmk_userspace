@@ -19,7 +19,6 @@
 
 enum charybdis_keymap_layers { LAYER_BASE = 0, LAYER_BASEQWERTY, LAYER_LOWER, LAYER_RAISE, LAYER_POINTER, LAYER_ADJUST };
 
-/** \brief Automatically enable sniping-mode on the pointer layer. */
 #define CHARYBDIS_AUTO_SNIPING_ON_LAYER LAYER_POINTER
 
 #define CHARYBDIS_MINIMUM_DEFAULT_DPI 1600
@@ -36,6 +35,43 @@ static uint16_t auto_pointer_layer_timer = 0;
 #    endif // CHARYBDIS_AUTO_POINTER_LAYER_TRIGGER_THRESHOLD
 #endif     // CHARYBDIS_AUTO_POINTER_LAYER_TRIGGER_ENABLE
 
+// タップダンスの定義用enum
+enum { TD_POINTER_LOCK = 0 };
+
+// ポインターレイヤーが固定されているかどうかのフラグ
+static bool is_pointer_locked = false;
+
+// Tap Dance: 1回タップでKC_LBRC、2回タップでレイヤーロック切替
+void td_pointer_lock_finished(tap_dance_state_t *state, void *user_data) {
+    if (state->count == 1) {
+        // 単打: 通常の [ (KC_LBRC) を入力
+        register_code(KC_LBRC);
+    } else if (state->count == 2) {
+        // ダブルタップ: 固定モードをトグル
+        is_pointer_locked = !is_pointer_locked;
+
+        if (is_pointer_locked) {
+            // 固定ON
+            layer_on(LAYER_POINTER);
+        } else {
+            // 固定OFF
+            layer_off(LAYER_POINTER);
+            auto_pointer_layer_timer = 0;
+        }
+    }
+}
+
+void td_pointer_lock_reset(tap_dance_state_t *state, void *user_data) {
+    if (state->count == 1) {
+        unregister_code(KC_LBRC);
+    }
+}
+
+// Tap Danceアクションの登録
+tap_dance_action_t tap_dance_actions[] = {[TD_POINTER_LOCK] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_pointer_lock_finished, td_pointer_lock_reset)};
+
+/** \brief Automatically enable sniping-mode on the pointer layer. */
+
 #define LOWER LT(LAYER_LOWER, KC_INT5)
 #define RAISE LT(LAYER_RAISE, KC_INT4)
 #define PT_Z LT(LAYER_POINTER, KC_Z)
@@ -44,70 +80,70 @@ static uint16_t auto_pointer_layer_timer = 0;
 // clang-format off
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   [LAYER_BASE] = LAYOUT(
-  // ╭──────────────────────────────────────────────────────╮ ╭──────────────────────────────────────────────────────╮
-        KC_TAB, KC_QUOT,    KC_Q,    KC_U,    KC_E, KC_COMM,       KC_L,    KC_D,    KC_R,    KC_Y,    KC_P, KC_LBRC,
-  // ├──────────────────────────────────────────────────────┤ ├──────────────────────────────────────────────────────┤
-       KC_BSPC, KC_MINS,    KC_I,    KC_A,    KC_O,  KC_DOT,       KC_G,    KC_T,    KC_N,    KC_S,    KC_H,    KC_F,
-  // ├──────────────────────────────────────────────────────┤ ├──────────────────────────────────────────────────────┤
-       KC_LSFT,    KC_Z,    KC_X,    KC_C,    KC_V, KC_SCLN,       KC_W,    KC_K,    KC_M,    KC_J,    KC_B, KC_RSFT,
-  // ╰──────────────────────────────────────────────────────┤ ├──────────────────────────────────────────────────────╯
-                                   KC_SPC, KC_LCTL,   LOWER,      RAISE,  KC_ENT
-  //                            ╰───────────────────────────╯ ╰──────────────────╯
+  // ╭──────────────────────────────────────────────────────╮                ╭──────────────────────────────────────────────────────╮
+        KC_TAB, KC_QUOT,    KC_Q,    KC_U,    KC_E, KC_COMM,                    KC_L,    KC_D,    KC_R,    KC_Y,    KC_P, TD(TD_POINTER_LOCK),
+  // ├──────────────────────────────────────────────────────┤                ├──────────────────────────────────────────────────────┤
+       KC_BSPC, KC_MINS,    KC_I,    KC_A,    KC_O,  KC_DOT,                    KC_G,    KC_T,    KC_N,    KC_S,    KC_H,    KC_F,
+  // ├──────────────────────────────────────────────────────┤                ├──────────────────────────────────────────────────────┤
+ OSM(MOD_LSFT),    KC_Z,    KC_X,    KC_C,    KC_V, MT(MOD_LGUI,KC_SCLN),       KC_W,    KC_K,    KC_M,    KC_J,    KC_B, MT(MOD_LALT | MOD_RALT,KC_ESC),
+  // ╰──────────────────────────────────────────────────────┤                ├──────────────────────────────────────────────────────╯
+                                   KC_SPC, KC_LCTL,   LOWER,                      RAISE,  KC_ENT
+  //                            ╰───────────────────────────╯                ╰──────────────────╯
   ),
 
   [LAYER_BASEQWERTY] = LAYOUT(
     // ╭──────────────────────────────────────────────────────╮ ╭──────────────────────────────────────────────────────╮
-            KC_TAB,  KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,       KC_Y,    KC_U,    KC_I,    KC_O,    KC_P, KC_LBRC,
+            KC_TAB,  KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,       KC_Y,    KC_U,    KC_I,    KC_O,    KC_P, TD(TD_POINTER_LOCK),
     // ├──────────────────────────────────────────────────────┤ ├──────────────────────────────────────────────────────┤
-           KC_BSPC,  KC_A,    KC_S,    KC_D,    KC_F,    KC_G,       KC_H,    KC_J,    KC_K,    KC_L, KC_SCLN, KC_RSFT,
+            KC_BSPC,  KC_A,    KC_S,    KC_D,    KC_F,    KC_G,       KC_H,    KC_J,    KC_K,    KC_L, KC_SCLN, KC_RSFT,
     // ├──────────────────────────────────────────────────────┤ ├──────────────────────────────────────────────────────┤
-           KC_LSFT,  KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,       KC_N,    KC_M, KC_COMM,  KC_DOT, KC_SLSH, KC_RSFT, 
+      OSM(MOD_LSFT),  KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,       KC_N,    KC_M, KC_COMM,  KC_DOT, KC_SLSH, MT(MOD_LALT | MOD_RALT,KC_ESC), 
     // ╰──────────────────────────────────────────────────────┤ ├──────────────────────────────────────────────────────╯
-                                       KC_SPC, KC_LCTL,   LOWER,      RAISE,  KC_ENT
+                                      KC_SPC, KC_LCTL,   LOWER,      RAISE,  KC_ENT
     //                            ╰───────────────────────────╯ ╰──────────────────╯
     ),
 
   [LAYER_LOWER] = LAYOUT(
   // ╭──────────────────────────────────────────────────────╮ ╭──────────────────────────────────────────────────────╮
-       XXXXXXX, RGB_TOG,    KC_7,    KC_8,    KC_9, XXXXXXX,    KC_LBRC,    KC_7,    KC_8,    KC_9, KC_RBRC, XXXXXXX,
+       _______, KC_PAST,   KC_P7,   KC_P8,   KC_P9, KC_PSLS,    XXXXXXX, KC_HOME,   KC_UP,  KC_END, KC_PGUP, XXXXXXX,
   // ├──────────────────────────────────────────────────────┤ ├──────────────────────────────────────────────────────┤
-       KC_BSPC, KC_PMNS,    KC_4,    KC_5,    KC_6, KC_PDOT,    KC_PPLS,    KC_4,    KC_5,    KC_6, KC_PMNS, XXXXXXX,
+       KC_BSPC, KC_PMNS,   KC_P4,   KC_P5,   KC_P6, KC_PDOT,    XXXXXXX, KC_LEFT, KC_DOWN, KC_RGHT, KC_PGDN,  KC_DEL,
   // ├──────────────────────────────────────────────────────┤ ├──────────────────────────────────────────────────────┤
-       XXXXXXX,    KC_0,    KC_1,    KC_2,    KC_3, KC_PPLS,    KC_PAST,    KC_1,    KC_2,    KC_3, KC_PSLS, XXXXXXX,
+       KC_LSFT,   KC_P0,   KC_P1,   KC_P2,   KC_P3, KC_PPLS,    KC_BTN4, KC_BTN1, KC_BTN2, KC_BTN3, KC_BTN5, KC_BTN5,
   // ╰──────────────────────────────────────────────────────┤ ├──────────────────────────────────────────────────────╯
-                                  XXXXXXX, XXXXXXX, _______,    XXXXXXX, _______
+                                  _______, _______, _______,    _______, _______
   //                            ╰───────────────────────────╯ ╰──────────────────╯
   ),
   
   [LAYER_RAISE] = LAYOUT(
   // ╭──────────────────────────────────────────────────────╮ ╭──────────────────────────────────────────────────────╮
-       XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,    XXXXXXX, KC_VOLU, KC_MUTE, KC_VOLD, XXXXXXX, XXXXXXX,
+       XXXXXXX, XXXXXXX, S(KC_7), KC_RBRC, KC_BSLS, XXXXXXX,    XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
   // ├──────────────────────────────────────────────────────┤ ├──────────────────────────────────────────────────────┤
-       XXXXXXX, KC_LEFT,   KC_UP, KC_DOWN, KC_RGHT, XXXXXXX,    XXXXXXX, KC_RSFT, KC_RCTL, KC_RALT, KC_RGUI, XXXXXXX,
+       KC_BSPC,S(KC_EQL),S(KC_2), S(KC_8), S(KC_9), XXXXXXX,    KC_INT1, S(KC_1), S(KC_SLSH), XXXXXXX, XXXXXXX, XXXXXXX,
   // ├──────────────────────────────────────────────────────┤ ├──────────────────────────────────────────────────────┤
-       XXXXXXX, KC_HOME, KC_PGUP, KC_PGDN,  KC_END, XXXXXXX,    QK_BOOT,  EE_CLR, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
+       _______, XXXXXXX, S(KC_3),S(KC_RBRC),S(KC_BSLS), XXXXXXX,    XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
   // ╰──────────────────────────────────────────────────────┤ ├──────────────────────────────────────────────────────╯
-                                  _______, _______, XXXXXXX,    _______, XXXXXXX
+                                  _______, _______, _______,    _______, _______
   //                            ╰───────────────────────────╯ ╰──────────────────╯
   ),
 
   [LAYER_POINTER] = LAYOUT(
   // ╭──────────────────────────────────────────────────────╮ ╭──────────────────────────────────────────────────────╮
-       XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, DPI_MOD, S_D_MOD,    S_D_MOD, DPI_MOD, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
+       _______, _______, _______, _______, _______, _______,    _______, _______, _______, _______, _______, _______,
   // ├──────────────────────────────────────────────────────┤ ├──────────────────────────────────────────────────────┤
-       XXXXXXX, KC_LGUI, KC_LALT, KC_LCTL, KC_LSFT, XXXXXXX,    XXXXXXX, KC_BTN1, KC_BTN2, KC_RALT, KC_RGUI, XXXXXXX,
+       _______, _______, _______, _______, _______, _______,    _______, KC_BTN1, KC_BTN2, KC_BTN3, _______, _______,
   // ├──────────────────────────────────────────────────────┤ ├──────────────────────────────────────────────────────┤
-       XXXXXXX, _______, DRGSCRL, SNIPING, XXXXXXX, XXXXXXX,    XXXXXXX, KC_BTN1, KC_BTN2, DRGSCRL, _______, XXXXXXX,
+       _______, _______, _______, _______, _______, _______,    KC_BTN4, KC_BTN1, KC_BTN2, DRGSCRL, _______, KC_BTN5,
   // ╰──────────────────────────────────────────────────────┤ ├──────────────────────────────────────────────────────╯
-                                  KC_BTN2, KC_BTN1, KC_BTN3,    KC_BTN3, KC_BTN1
+                                  _______, _______, _______,    _______, _______
   //                            ╰───────────────────────────╯ ╰──────────────────╯
   ),
 
   [LAYER_ADJUST] = LAYOUT(
   // ╭──────────────────────────────────────────────────────╮ ╭──────────────────────────────────────────────────────╮
-       XXXXXXX, RGB_TOG, RGB_MOD, RGB_HUI, RGB_SAI, RGB_VAI,    XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
+         DF(0), XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,    XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,   DF(1),
   // ├──────────────────────────────────────────────────────┤ ├──────────────────────────────────────────────────────┤
-       XXXXXXX, RGB_M_P, RGB_M_B, RGB_HUD, RGB_SAD, RGB_VAD,    KC_PSCR, KC_SCRL, KC_PAUS, XXXXXXX, XXXXXXX, XXXXXXX,
+       XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, LSG(KC_S), XXXXXXX,  XXXXXXX, G(KC_H), XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
   // ├──────────────────────────────────────────────────────┤ ├──────────────────────────────────────────────────────┤
        XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,    XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
   // ╰──────────────────────────────────────────────────────┤ ├──────────────────────────────────────────────────────╯
@@ -125,10 +161,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 #define ACCEL_V2 8.0f         // 高速域への到達閾値
 #define ACCEL_MAX_SCALE 12.0f // 最大加速倍率
 
-// 軸ごとの感度補正（1.0 = 補正なし）
-// 親指は縦移動が苦手なので、Y軸を少しブーストすると快適になります
-#define SENSITIVITY_X 1.0f
-#define SENSITIVITY_Y 1.1f
+#define YBOOST_MIN 0.05f // 低速域での追加ブースト（1.05倍）
+#define YBOOST_MAX 0.20f // 高速域での最大ブースト（1.20倍）
 
 // ===============================================
 
@@ -137,33 +171,44 @@ static inline int8_t clip2int8(int16_t v) {
 }
 
 static void apply_trackball_acceleration(report_mouse_t *m) {
-    // 1. まず軸ごとの基本感度を適用（親指補正）
-    float raw_x = (float)m->x * SENSITIVITY_X;
-    float raw_y = (float)m->y * SENSITIVITY_Y;
+    // 1. 元の値を float に変換
+    float raw_x = (float)m->x;
+    float raw_y = (float)m->y;
 
-    // 2. 正確な移動速度（ユークリッド距離）を計算
+    // 2. 速度計算（ユークリッド距離）
     float speed = sqrtf(raw_x * raw_x + raw_y * raw_y);
 
-    // 3. 加速倍率の計算
+    // 3. 非線形加速カーブの計算
     float scale = 1.0f;
 
     if (speed > ACCEL_V1) {
         if (speed >= ACCEL_V2) {
             scale = ACCEL_MAX_SCALE;
         } else {
-            // 0〜1 に正規化
-            float t = (speed - ACCEL_V1) / (ACCEL_V2 - ACCEL_V1);
-
-            // 擬似 t^1.3 カーブ (0.6*t + 0.4*t^2)
-            float curve = t * (0.6f + 0.4f * t);
-
-            scale = 1.0f + curve * (ACCEL_MAX_SCALE - 1.0f);
+            float t     = (speed - ACCEL_V1) / (ACCEL_V2 - ACCEL_V1);
+            float curve = t * (0.6f + 0.4f * t); // ≒ t^1.3
+            scale       = 1.0f + curve * (ACCEL_MAX_SCALE - 1.0f);
         }
     }
 
-    // 4. 最終的な値を適用
-    m->x = clip2int8((int16_t)(raw_x * scale));
-    m->y = clip2int8((int16_t)(raw_y * scale));
+    // 4. 速度依存 Y ブーストの計算
+    float boost_y = 1.0f;
+
+    if (speed > 0.1f) {
+        // 0〜1に正規化 (遅 → 速)
+        float t = fminf(speed / ACCEL_V2, 1.0f);
+
+        // YBOOST_MIN 〜 YBOOST_MAX に線形補間
+        boost_y = 1.0f + YBOOST_MIN + (YBOOST_MAX - YBOOST_MIN) * t;
+    }
+
+    // 5. XY に適用（X は補正なし、Y のみ速度依存）
+    float adj_x = raw_x * scale;
+    float adj_y = raw_y * scale * boost_y;
+
+    // 6. int8 にクリップして反映
+    m->x = clip2int8((int16_t)adj_x);
+    m->y = clip2int8((int16_t)adj_y);
 }
 
 #ifdef POINTING_DEVICE_ENABLE
@@ -184,6 +229,11 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
 }
 
 void matrix_scan_user(void) {
+    // 固定モード中はタイムアウトチェックを行わない（レイヤーを維持する）
+    if (is_pointer_locked) {
+        return;
+    }
+
     if (auto_pointer_layer_timer != 0 && TIMER_DIFF_16(timer_read(), auto_pointer_layer_timer) >= CHARYBDIS_AUTO_POINTER_LAYER_TRIGGER_TIMEOUT_MS) {
         auto_pointer_layer_timer = 0;
         layer_off(LAYER_POINTER);
@@ -202,6 +252,31 @@ layer_state_t layer_state_set_user(layer_state_t state) {
 static uint16_t lshift_timer = 0;
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    if (is_pointer_locked && record->event.pressed) {
+        switch (keycode) {
+            // ▼ 以下のキーはロックを解除しない（マウス操作に必要なため）
+            case KC_BTN1 ... KC_BTN5: // マウスボタン
+            case DRGSCRL:             // ドラッグスクロール
+            case KC_LSFT:             // Shift (Shiftクリック用)
+            case KC_LCTL:             // Ctrl (Ctrlクリック用)
+            case KC_LALT:             // Alt
+            case KC_LGUI:             // GUI
+            case OSM(MOD_LSFT):       // あなたのOSM Shift
+            case TD(TD_POINTER_LOCK): // ロック解除キー自体（TapDance側で処理させるためここでは無視）
+                break; // 何もしない（ロック維持）
+
+            // ▼ それ以外のキー（Q, A, Space, Enterなど）が押されたらロック解除！
+            default:
+                is_pointer_locked = false;      // フラグを下ろす
+                layer_off(LAYER_POINTER);       // レイヤーを消す
+                auto_pointer_layer_timer = 0;   // 自動タイマーもリセット
+                // ここで return false しない！
+                // (キー入力自体はそのまま通して、文字を入力させる)
+                break;
+        }
+    }
+
+
     // --- アルティメット左Shift (OSM + Caps Word) ---
     switch (keycode) {
         case OSM(MOD_LSFT):
@@ -243,24 +318,14 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
 // --- Key Overrides ------------------------------------------------------
 
-const key_override_t ctrl_f_to_o =
-    ko_make_with_layers(
-        MOD_MASK_CTRL,    // 条件：Ctrl が押されたとき
-        KC_F,             // from: F
-        LCTL(KC_O),       // to: Ctrl+O（強制）
-        1 << 0            // layer_mask: レイヤー 0
-    );
+const key_override_t ctrl_f_to_o = ko_make_with_layers(MOD_MASK_CTRL, // 条件：Ctrl が押されたとき
+                                                       KC_F,          // from: F
+                                                       LCTL(KC_O),    // to: Ctrl+O（強制）
+                                                       1 << 0         // layer_mask: レイヤー 0
+);
 
-const key_override_t ctrl_o_to_f =
-    ko_make_with_layers(
-        MOD_MASK_CTRL,
-        KC_O,
-        LCTL(KC_F),
-        1 << 0            // layer 0 限定
-    );
+const key_override_t ctrl_o_to_f = ko_make_with_layers(MOD_MASK_CTRL, KC_O, LCTL(KC_F),
+                                                       1 << 0 // layer 0 限定
+);
 
-const key_override_t *key_overrides[] = {
-    &ctrl_f_to_o,
-    &ctrl_o_to_f,
-    NULL
-};
+const key_override_t *key_overrides[] = {&ctrl_f_to_o, &ctrl_o_to_f, NULL};

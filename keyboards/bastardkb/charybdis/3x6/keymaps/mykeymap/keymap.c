@@ -16,6 +16,7 @@
  */
 #include QMK_KEYBOARD_H
 #include <math.h>
+#include "repeat_key.h"
 
 enum charybdis_keymap_layers { LAYER_BASE = 0, LAYER_BASEQWERTY, LAYER_LOWER, LAYER_RAISE, LAYER_POINTER, LAYER_ADJUST };
 
@@ -76,6 +77,7 @@ tap_dance_action_t tap_dance_actions[] = {[TD_POINTER_LOCK] = ACTION_TAP_DANCE_F
 #define RAISE LT(LAYER_RAISE, KC_INT4)
 #define PT_Z LT(LAYER_POINTER, KC_Z)
 #define PT_SLSH LT(LAYER_POINTER, KC_SLSH)
+#define CTL_REP MT(MOD_LCTL, KC_0)
 
 // clang-format off
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
@@ -87,7 +89,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   // ├──────────────────────────────────────────────────────┤                ├──────────────────────────────────────────────────────┤
  OSM(MOD_LSFT),    KC_Z,    KC_X,    KC_C,    KC_V, MT(MOD_LGUI,KC_SCLN),       KC_W,    KC_K,    KC_M,    KC_J,    KC_B, MT(MOD_LALT | MOD_RALT,KC_ESC),
   // ╰──────────────────────────────────────────────────────┤                ├──────────────────────────────────────────────────────╯
-                                   KC_SPC, KC_LCTL,   LOWER,                      RAISE,  KC_ENT
+                                   KC_SPC, CTL_REP,   LOWER,                      RAISE,  KC_ENT
   //                            ╰───────────────────────────╯                ╰──────────────────╯
   ),
 
@@ -99,7 +101,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // ├──────────────────────────────────────────────────────┤ ├──────────────────────────────────────────────────────┤
       OSM(MOD_LSFT),  KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,       KC_N,    KC_M, KC_COMM,  KC_DOT, KC_SLSH, MT(MOD_LALT | MOD_RALT,KC_ESC), 
     // ╰──────────────────────────────────────────────────────┤ ├──────────────────────────────────────────────────────╯
-                                      KC_SPC, KC_LCTL,   LOWER,      RAISE,  KC_ENT
+                                      KC_SPC, CTL_REP,   LOWER,      RAISE,  KC_ENT
     //                            ╰───────────────────────────╯ ╰──────────────────╯
     ),
 
@@ -263,19 +265,32 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             case KC_LGUI:             // GUI
             case OSM(MOD_LSFT):       // あなたのOSM Shift
             case TD(TD_POINTER_LOCK): // ロック解除キー自体（TapDance側で処理させるためここでは無視）
-                break; // 何もしない（ロック維持）
+                break;                // 何もしない（ロック維持）
 
             // ▼ それ以外のキー（Q, A, Space, Enterなど）が押されたらロック解除！
             default:
-                is_pointer_locked = false;      // フラグを下ろす
-                layer_off(LAYER_POINTER);       // レイヤーを消す
-                auto_pointer_layer_timer = 0;   // 自動タイマーもリセット
+                is_pointer_locked = false;    // フラグを下ろす
+                layer_off(LAYER_POINTER);     // レイヤーを消す
+                auto_pointer_layer_timer = 0; // 自動タイマーもリセット
                 // ここで return false しない！
                 // (キー入力自体はそのまま通して、文字を入力させる)
                 break;
         }
     }
 
+    if (keycode == CTL_REP) {
+        // タップとして扱われた場合だけ Repeat を発火
+        if (record->tap.count) {
+            // press / release の両方とも Repeat Key にイベントをそのまま渡す
+            repeat_key_invoke(&record->event);
+
+            // その代わり、元の MT(MOD_LCTL, KC_0) のタップ処理(KC_0送信)は完全に殺す
+            return false;
+        }
+
+        // tap ではなく hold 判定のときは、通常の Mod-Tap に任せる（Ctrl として動く）
+        return true;
+    }
 
     // --- アルティメット左Shift (OSM + Caps Word) ---
     switch (keycode) {
@@ -314,6 +329,15 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     // if (!process_achordion(keycode, record)) { return false; }
 
     return true;
+}
+
+bool remember_last_key_user(uint16_t keycode, keyrecord_t *record, uint8_t *remembered_mods) {
+    switch (keycode) {
+        case CTL_REP:
+            // Ctrl/Repeat キー自体は「最後に押されたキー」にしない
+            return false;
+    }
+    return true; // 他のキーはすべて通常どおり Repeat 対象にする
 }
 
 // --- Key Overrides ------------------------------------------------------

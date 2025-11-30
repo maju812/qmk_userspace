@@ -45,10 +45,10 @@ static bool is_pointer_locked = false;
 // Tap Dance: 1回タップでKC_LBRC、2回タップでレイヤーロック切替
 void td_pointer_lock_finished(tap_dance_state_t *state, void *user_data) {
     if (state->count == 1) {
-        // 単打: 通常の [ (KC_LBRC) を入力
-        register_code(KC_LBRC);
-    } else if (state->count == 2) {
-        // ダブルタップ: 固定モードをトグル
+        // 単打: 「押して離す」まで自動でやる
+        tap_code16(KC_LBRC);
+    } else if (state->count >= 2) {
+        // ダブルタップ以上: 固定モードをトグル
         is_pointer_locked = !is_pointer_locked;
 
         if (is_pointer_locked) {
@@ -62,14 +62,12 @@ void td_pointer_lock_finished(tap_dance_state_t *state, void *user_data) {
     }
 }
 
-void td_pointer_lock_reset(tap_dance_state_t *state, void *user_data) {
-    if (state->count == 1) {
-        unregister_code(KC_LBRC);
-    }
-}
+
 
 // Tap Danceアクションの登録
-tap_dance_action_t tap_dance_actions[] = {[TD_POINTER_LOCK] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_pointer_lock_finished, td_pointer_lock_reset)};
+tap_dance_action_t tap_dance_actions[] = {
+    [TD_POINTER_LOCK] = ACTION_TAP_DANCE_FN(td_pointer_lock_finished),
+};
 
 /** \brief Automatically enable sniping-mode on the pointer layer. */
 

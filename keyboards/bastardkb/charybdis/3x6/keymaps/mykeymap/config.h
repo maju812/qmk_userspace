@@ -32,7 +32,7 @@
 
 #define CHARYBDIS_DRAGSCROLL_REVERSE_Y // inverts vertical scrolling
 
-#define PERMISSIVE_HOLD
-#define TAPPING_TERM 160
+#define HOLD_ON_OTHER_KEY_PRESS
+#define TAPPING_TERM 180
 
 #define ONESHOT_TAP_TOGGLE 0

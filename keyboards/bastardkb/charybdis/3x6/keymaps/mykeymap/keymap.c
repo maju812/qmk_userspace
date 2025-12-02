@@ -73,8 +73,6 @@ tap_dance_action_t tap_dance_actions[] = {
 
 #define LOWER LT(LAYER_LOWER, KC_INT5)
 #define RAISE LT(LAYER_RAISE, KC_INT4)
-#define PT_Z LT(LAYER_POINTER, KC_Z)
-#define PT_SLSH LT(LAYER_POINTER, KC_SLSH)
 #define CTL_REP MT(MOD_LCTL, KC_0)
 
 // clang-format off
@@ -109,7 +107,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   // ├──────────────────────────────────────────────────────┤ ├──────────────────────────────────────────────────────┤
        KC_BSPC, KC_PMNS,   KC_P4,   KC_P5,   KC_P6, KC_PDOT,    XXXXXXX, KC_LEFT, KC_DOWN, KC_RGHT, KC_PGDN,  KC_DEL,
   // ├──────────────────────────────────────────────────────┤ ├──────────────────────────────────────────────────────┤
-       KC_LSFT,   KC_P0,   KC_P1,   KC_P2,   KC_P3, KC_PPLS,    KC_BTN4, KC_BTN1, KC_BTN2, KC_BTN3, KC_BTN5, KC_BTN5,
+       KC_LSFT,   KC_P0,   KC_P1,   KC_P2,   KC_P3, KC_PPLS,    KC_BTN4, KC_BTN1, KC_BTN2, KC_BTN3, KC_BTN5, KC_BSPC,
   // ╰──────────────────────────────────────────────────────┤ ├──────────────────────────────────────────────────────╯
                                   _______, _______, _______,    _______, _______
   //                            ╰───────────────────────────╯ ╰──────────────────╯
